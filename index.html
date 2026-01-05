@@ -3,299 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>李晓庆社区-手机完美缩放版</title>
+    <title>李晓庆社区-SeaTable正式版</title>
     <style>
-        :root { --primary: #007AFF; --success: #34c759; --danger: #ff3b30; --bg: #f2f2f7; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-bottom: 80px; }
-        
-        /* 顶部搜索 */
-        .header-box { position: sticky; top: 0; z-index: 999; background: var(--bg); padding: 5px 0 10px; }
-        .search-bar { display: flex; gap: 8px; margin-bottom: 8px; }
-        .search-input { flex: 1; padding: 12px; border: none; border-radius: 12px; outline: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .filter-panel { background: white; padding: 10px; border-radius: 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 10px;}
-        .date-input { border: 1px solid #eee; padding: 6px; border-radius: 6px; font-size: 12px; flex: 1; }
-
-        /* 发布区域 */
-        .post-card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .user-input { border: none; font-size: 18px; font-weight: bold; width: 100%; outline: none; margin-bottom: 5px; }
-        textarea { width: 100%; min-height: 80px; border: none; resize: none; outline: none; font-size: 16px; }
-
-        /* 预览区 */
-        #preViewBox { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
-        .pre-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: #eee; border: 1px solid #ddd; }
-        .pre-item img, .pre-item video { width: 100%; height: 100%; object-fit: cover; }
-        .del-tag { position: absolute; top: 0; right: 0; background: var(--danger); color: white; padding: 2px 8px; font-size: 14px; z-index: 10; border-bottom-left-radius: 8px; cursor: pointer; }
-
-        .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
-        .f-label { background: #fff; border: 1px solid #ddd; padding: 12px; text-align: center; border-radius: 12px; font-size: 13px; cursor: pointer; }
-        .pub-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: bold; }
-
-        /* 列表显示 */
-        .msg-item { background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px; }
-        .list-media { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-        .list-media img { width: 31.8%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; cursor: pointer; }
-
-        /* --- 手机端大图查看器优化 --- */
-        #imgViewer { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.98); z-index: 10000; justify-content: center; align-items: center; 
-            touch-action: none; overflow: hidden;
-        }
-        #viewerContent { 
-            max-width: 100%; max-height: 100%; object-fit: contain; 
-            transition: transform 0.1s ease-out; will-change: transform; 
-        }
-        .viewer-close { position: absolute; top: 30px; right: 25px; color: white; font-size: 40px; font-weight: bold; z-index: 10001; }
+        :root { --primary: #007AFF; --bg: #f2f2f7; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); padding: 15px; }
+        .post-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        textarea { width: 100%; min-height: 100px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin: 10px 0; font-size: 16px; }
+        .pub-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .msg-item { background: white; border-radius: 12px; padding: 12px; margin-top: 15px; border-left: 5px solid var(--primary); }
     </style>
 </head>
 <body>
 
-<div id="imgViewer">
-    <span class="viewer-close" onclick="closeViewer()">&times;</span>
-    <img id="viewerContent" src="" onclick="event.stopPropagation()">
+<div class="post-card">
+    <input type="text" id="nick" value="李晓庆" style="font-weight:bold; border:none; font-size:18px; outline:none;">
+    <textarea id="text" placeholder="输入内容..."></textarea>
+    <button id="pubBtn" onclick="submitPost()" class="pub-btn">发布到 SeaTable</button>
 </div>
-
-<div class="container">
-    <div class="header-box">
-        <div class="search-bar">
-            <input type="text" id="search" class="search-input" placeholder="🔍 搜索内容..." oninput="doSearch()">
-            <button onclick="directExport()" style="border:none; padding:0 10px; border-radius:12px; background:var(--success); color:white; font-size:12px;">备份HTML</button>
-            <button onclick="exportJSON()" style="border:none; padding:0 10px; border-radius:12px; background:var(--primary); color:white; font-size:12px;">导出数据</button>
-            <button onclick="document.getElementById('importFile').click()" style="border:none; padding:0 10px; border-radius:12px; background:#673ab7; color:white; font-size:12px;">导入数据</button>
-            <button onclick="clearAll()" style="border:none; padding:0 5px; border-radius:12px; background:var(--danger); color:white; font-size:12px;">清空</button>
-        </div>
-        <div class="filter-panel">
-            <input type="date" id="dateStart" class="date-input" onchange="doSearch()">
-            <span>至</span>
-            <input type="date" id="dateEnd" class="date-input" onchange="doSearch()">
-            <button onclick="resetSearch()" style="border:none; background:none; color:var(--primary); font-size:12px;">重置</button>
-        </div>
-        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
-    </div>
-
-    <div class="post-card">
-        <input type="text" id="nick" value="李晓庆" class="user-input">
-        <textarea id="text" placeholder="此时此刻的想法..."></textarea>
-        <div id="preViewBox"></div>
-        <div class="btn-group">
-            <label class="f-label">🖼️ 选图<input type="file" accept="image/*" multiple hidden onchange="handleFiles(this, 'imgs')"></label>
-            <label class="f-label">🎬 视频<input type="file" accept="video/*" multiple hidden onchange="handleFiles(this, 'vids')"></label>
-            <label class="f-label">📄 文档<input type="file" multiple hidden onchange="handleFiles(this, 'docs')"></label>
-        </div>
-        <button onclick="submitPost()" class="pub-btn">确认发布</button>
-    </div>
-
-    <div id="list"></div>
-</div>
+<div id="list" style="margin-top:20px;">正在获取数据...</div>
 
 <script>
-    let db;
-    let queue = { imgs: [], vids: [], docs: [] };
-    let allPosts = [];
-
-    // 初始化数据库
-    const req = indexedDB.open("20260103", 10);
-    req.onupgradeneeded = e => {
-        db = e.target.result;
-        if (!db.objectStoreNames.contains("posts")) db.createObjectStore("posts", { keyPath: "id", autoIncrement: true });
+    const ST_CONFIG = {
+        serverUrl: 'https://cloud.seatable.cn',
+        apiToken: '089d8d96364b277f0e76d36e139fb924b1c82149',
+        tableName: '记录'
     };
-    req.onsuccess = e => { db = e.target.result; load(); };
 
-    // --- 核心手势缩放逻辑 ---
-    let scale = 1, lastScale = 1, startDist = 0;
-    let posX = 0, posY = 0, startX = 0, startY = 0;
-    const vBox = document.getElementById('imgViewer');
-    const vImg = document.getElementById('viewerContent');
-
-    function viewImage(src) {
-        vImg.src = src;
-        scale = 1; posX = 0; posY = 0;
-        updateTransform();
-        vBox.style.display = 'flex';
-    }
-
-    function closeViewer() { vBox.style.display = 'none'; }
-
-    function updateTransform() {
-        vImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-    }
-
-    vBox.addEventListener('touchstart', e => {
-        if (e.touches.length === 2) {
-            startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-            lastScale = scale;
-        } else if (e.touches.length === 1) {
-            startX = e.touches[0].pageX - posX;
-            startY = e.touches[0].pageY - posY;
-        }
-    });
-
-    vBox.addEventListener('touchmove', e => {
-        e.preventDefault();
-        if (e.touches.length === 2) {
-            const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-            scale = Math.min(Math.max(1, lastScale * (dist / startDist)), 4);
-        } else if (e.touches.length === 1 && scale > 1) {
-            posX = e.touches[0].pageX - startX;
-            posY = e.touches[0].pageY - startY;
-        }
-        updateTransform();
-    }, { passive: false });
-
-    // --- 基础业务逻辑 ---
-    async function handleFiles(input, type) {
-        for (let f of Array.from(input.files)) {
-            const data = await new Promise(res => {
-                const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f);
-            });
-            queue[type].push({ id: Date.now() + Math.random(), name: f.name, data });
-        }
-        input.value = ''; renderQueue();
-    }
-
-    function renderQueue() {
-        const box = document.getElementById('preViewBox'); box.innerHTML = '';
-        queue.imgs.forEach(i => box.appendChild(createPreItem(i, 'imgs', 'img')));
-        queue.vids.forEach(v => box.appendChild(createPreItem(v, 'vids', 'video')));
-        queue.docs.forEach(d => {
-            const div = document.createElement('div');
-            div.style="grid-column:span 3; background:#f0f7ff; padding:8px; border-radius:8px; font-size:12px; display:flex; justify-content:space-between; margin-bottom:5px;";
-            div.innerHTML = `<span>📄 ${d.name}</span><span onclick="removeItem('docs',${d.id})" style="color:red; cursor:pointer">移除</span>`;
-            box.appendChild(div);
+    // 获取授权的统一函数
+    async function getAuth() {
+        const res = await fetch(`${ST_CONFIG.serverUrl}/api/v2.1/get-base-token/`, {
+            headers: { Authorization: `Token ${ST_CONFIG.apiToken}` }
         });
+        if (!res.ok) throw new Error("Token权限错误");
+        return await res.json();
     }
 
-    function createPreItem(item, type, tag) {
-        const div = document.createElement('div'); div.className = 'pre-item';
-        const media = document.createElement(tag); media.src = item.data;
-        div.innerHTML = `<div class="del-tag" onclick="removeItem('${type}', ${item.id})">×</div>`;
-        div.prepend(media); return div;
-    }
-
-    function removeItem(type, id) { queue[type] = queue[type].filter(i => i.id !== id); renderQueue(); }
-
-    function submitPost() {
+    // 发布数据
+    async function submitPost() {
         const txt = document.getElementById('text').value.trim();
-        if (!txt && queue.imgs.length === 0 && queue.docs.length === 0 && queue.vids.length === 0) return;
-        const now = new Date();
-        const tx = db.transaction("posts", "readwrite");
-        tx.objectStore("posts").add({
-            user: document.getElementById('nick').value,
-            content: txt, time: now.toLocaleString(), 
-            searchDate: now.toISOString().split('T')[0],
-            imgs: [...queue.imgs], vids: [...queue.vids], docs: [...queue.docs]
-        });
-        tx.oncomplete = () => { 
-            document.getElementById('text').value = ''; 
-            queue = { imgs: [], vids: [], docs: [] }; 
-            renderQueue(); load(); 
-        };
+        if (!txt) return alert("请输入内容");
+        
+        const btn = document.getElementById('pubBtn');
+        btn.innerText = "传输中...";
+        btn.disabled = true;
+
+        try {
+            const auth = await getAuth();
+            const response = await fetch(`${ST_CONFIG.serverUrl}/dtable-server/api/v1/dtables/${auth.dtable_uuid}/rows/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${auth.access_token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "table_name": ST_CONFIG.tableName,
+                    "row": {
+                        "user": document.getElementById('nick').value,
+                        "content": txt,
+                        "time": new Date().toLocaleString(),
+                        "searchDate": new Date().toISOString().split('T')[0]
+                    }
+                })
+            });
+
+            if (response.ok) {
+                document.getElementById('text').value = '';
+                alert("发布成功！");
+                loadData();
+            } else {
+                alert("SeaTable拒绝接收：检查表名或列名是否正确");
+            }
+        } catch (e) {
+            alert("连接失败！请不要直接双击打开HTML，请使用服务器地址访问。");
+        } finally {
+            btn.innerText = "发布到 SeaTable";
+            btn.disabled = false;
+        }
     }
 
-    function load() {
-        db.transaction("posts").objectStore("posts").getAll().onsuccess = e => {
-            allPosts = e.target.result.reverse(); renderList(allPosts);
-        };
-    }
-
-    function renderList(data) {
-        const list = document.getElementById('list'); list.innerHTML = '';
-        data.forEach(p => {
-            const div = document.createElement('div'); div.className = 'msg-item';
-            div.innerHTML = `
-                <div style="font-size:11px; color:#999; margin-bottom:8px;"><b>${p.user}</b> · ${p.time} <span style="float:right; color:red; cursor:pointer" onclick="drop(${p.id})">删除</span></div>
-                <div style="white-space:pre-wrap; font-size:15px; line-height:1.5;">${p.content}</div>
-                <div class="list-media">
-                    ${p.imgs.map(i => `<img src="${i.data}" onclick="viewImage('${i.data}')">`).join('')}
+    // 读取数据
+    async function loadData() {
+        try {
+            const auth = await getAuth();
+            const res = await fetch(`${ST_CONFIG.serverUrl}/dtable-server/api/v1/dtables/${auth.dtable_uuid}/rows/?table_name=${ST_CONFIG.tableName}`, {
+                headers: { 'Authorization': `Token ${auth.access_token}` }
+            });
+            const data = await res.json();
+            document.getElementById('list').innerHTML = (data.rows || []).reverse().map(p => `
+                <div class="msg-item">
+                    <div style="font-size:12px; color:#999;">${p.user} · ${p.time}</div>
+                    <div style="margin-top:8px;">${p.content}</div>
                 </div>
-                ${p.vids.map(v => `<video controls src="${v.data}" playsinline style="width:100%; border-radius:10px; margin-top:8px; background:#000;"></video>`).join('')}
-                ${p.docs.map(d => `
-                    <div style="margin-top:10px; padding:12px; background:#f8f9ff; border-radius:10px; font-size:13px; color:var(--primary); border:1px solid #e1e8ff;" onclick="forceDownload('${d.data}', '${d.name}')">
-                        📄 ${d.name} <span style="float:right">下载 ⬇️</span>
-                    </div>
-                `).join('')}
-            `;
-            list.appendChild(div);
-        });
+            `).join('') || "暂无数据";
+        } catch (e) {
+            document.getElementById('list').innerHTML = "无法加载数据，请检查网络或CORS限制。";
+        }
     }
 
-    // --- 下载与搜索优化 ---
-    function forceDownload(base64Data, filename) {
-        const a = document.createElement('a');
-        a.href = base64Data;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => document.body.removeChild(a), 100);
-    }
-
-    function exportJSON() {
-        const tx = db.transaction("posts", "readonly");
-        tx.objectStore("posts").getAll().onsuccess = e => {
-            const blob = new Blob([JSON.stringify(e.target.result)], { type: "application/json" });
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const a = document.createElement('a');
-                a.href = ev.target.result;
-                a.download = `社区备份_${new Date().getTime()}.json`;
-                document.body.appendChild(a);
-                a.click();
-            };
-            reader.readAsDataURL(blob);
-        };
-    }
-
-    function directExport() {
-        const html = document.documentElement.outerHTML;
-        const blob = new Blob([html], { type: 'text/html' });
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const a = document.createElement('a');
-            a.href = e.target.result;
-            a.download = `网页备份_${Date.now()}.html`;
-            document.body.appendChild(a);
-            a.click();
-        };
-        reader.readAsDataURL(blob);
-    }
-
-    async function importJSON(input) {
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                const tx = db.transaction("posts", "readwrite");
-                data.forEach(item => { if(item.id) delete item.id; tx.objectStore("posts").add(item); });
-                tx.oncomplete = () => { alert("导入成功！"); load(); };
-            } catch (err) { alert("格式错误！"); }
-        };
-        reader.readAsText(file);
-    }
-
-    function doSearch() {
-        const k = document.getElementById('search').value.toLowerCase();
-        const s = document.getElementById('dateStart').value;
-        const e = document.getElementById('dateEnd').value;
-        renderList(allPosts.filter(p => {
-            const matchK = (p.content + p.user).toLowerCase().includes(k);
-            let matchD = true;
-            if (s && p.searchDate < s) matchD = false;
-            if (e && p.searchDate > e) matchD = false;
-            return matchK && matchD;
-        }));
-    }
-
-    function resetSearch() {
-        document.getElementById('search').value = '';
-        document.getElementById('dateStart').value = '';
-        document.getElementById('dateEnd').value = '';
-        renderList(allPosts);
-    }
-
-    function drop(id) { if(confirm("删除？")) db.transaction("posts", "readwrite").objectStore("posts").delete(id).onsuccess = load; }
-    function clearAll() { if(confirm("清空？")) db.transaction("posts", "readwrite").objectStore("posts").clear().onsuccess = load; }
+    window.onload = loadData;
 </script>
 </body>
 </html>
